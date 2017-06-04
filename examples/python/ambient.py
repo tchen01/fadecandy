@@ -46,44 +46,46 @@ def pixel_ave(l1,l2):
     return l
 
 #colors
-black=(0,0,0)
-white=(255,255,255)
-natural=(255, 197, 143)
-christmas=(255,195,120)
-warm_LED=(255, 210, 125)
-sodium=(255, 209, 178)
-dim_sodium=(255, 183, 130)
-cyan=(90, 210, 240)
-pink=(250,60,110)
+class colors:
+    black=(0,0,0)
+    white=(255,255,255)
+    natural=(255, 197, 143)
+    christmas=(255,195,120)
+    warm_LED=(255, 210, 125)
+    sodium=(255, 209, 178)
+    dim_sodium=(255, 183, 130)
+    cyan=(90, 210, 240)
+    pink=(250,60,110)
+    summer_sunset=[(248,177,149),(246,114,128),(192,108,132),(108,91,123),(53,92,125)]
+
 
 #led arrangements
-vaporwave=[cyan]*127+[pink]*61
+class arrangements:
+    vaporwave=[colors.cyan]*127+[colors.pink]*61
 
-
-def blues():
-    return (100+sp.random.randint(90), 20+sp.random.randint(80), 155+sp.random.randint(100))
-
-def naturals():
-    return (240+sp.random.randint(15), 182+sp.random.randint(15), 128+sp.random.randint(15))
-
-def reds():
-    return (155+sp.random.randint(100), 20+sp.random.randint(80), 50+sp.random.randint(80))
-
-def random_color(color_range,offset=(0,0,0)):
-    def rc():
-        t=sp.random.randint(100)
-        return (offset[0]+int(color_range[0]*sp.sin(sp.pi/30*t)),
-                offset[1]+int(color_range[1]*sp.sin(sp.pi/10*t)),
-                offset[2]+int(color_range[2]*sp.sin(sp.pi/20*t)))
-    return rc
+class cfxn:
+    def blues():
+        return (100+sp.random.randint(90), 20+sp.random.randint(80), 155+sp.random.randint(100))
     
+    def naturals():
+        return (240+sp.random.randint(15), 182+sp.random.randint(15), 128+sp.random.randint(15))
     
-def random_vapor():
-    if(sp.rand()>0.5):
-        return (0,0,0)
-    else:
-        return (2*(250-90),2*(60-210),2*(110-240))
-
+    def reds():
+        return (155+sp.random.randint(100), 20+sp.random.randint(80), 50+sp.random.randint(80))
+    
+    def random_color(color_range,offset=(0,0,0)):
+        def rc():
+            t=sp.random.randint(100)
+            return (offset[0]+int(color_range[0]*sp.sin(sp.pi/30*t)),
+                    offset[1]+int(color_range[1]*sp.sin(sp.pi/10*t)),
+                    offset[2]+int(color_range[2]*sp.sin(sp.pi/20*t)))
+        return rc
+        
+    def random_list_color(color_list):
+        def rc():
+            t=sp.random.randint(len(color_list))
+            return color_list[t]
+        return rc
 
 
 #generrate ambient lights
@@ -105,15 +107,38 @@ def ambient_fade(def_pixels,color_range,delay):
     t=0
     while True:
         t=(t+1) % 100
-        diff=(int(color_range[0]*sp.sin(sp.pi/30*t)),int(color_range[1]*sp.sin(sp.pi/10*t)),int(color_range[2]*sp.sin(sp.pi/20*t)))
+        diff=(int(color_range[0]*sp.sin(2*sp.pi/100*t)),int(color_range[1]*sp.sin(2*sp.pi/30*t)),int(color_range[2]*sp.sin(2*sp.pi/60*t)))
         pixels=pixels_init
         for i in range(len(def_pixels)):
             pixels[i] = tuple(int(sp.sum(z)) for z in zip(pixels[i],diff))
         client.put_pixels(pixels)
         time.sleep(delay) 
         
+def cycle_colors(color_list,delay):
+    pixels_init=[(0,0,0)]*numLEDs
+    t=0
+    while True:
+        t=(t+1)%len(color_list)
+        t=sp.random.randint(len(color_list))
+        pixels=pixels_init
+        for i in range(numLEDs):
+            pixels[i] = color_list[t]
+        client.put_pixels(pixels)
+        time.sleep(delay)
 
-
+#vibes
+class vibes:
+    def summer(delay):
+        bg=colors.summer_sunset[0]
+        color_list=[(0,0,0)]*len(colors.summer_sunset)
+        for i in range(len(colors.summer_sunset)):
+            color_list[i]=tuple(x - y for x, y in zip(colors.summer_sunset[i], bg))
+        ambient_spots(0,[bg]*numLEDs,cfxn.random_list_color(color_list),15,40,delay)
+        
+        
+    def vaporwave(delay):
+        ambient_spots(0,arrangements.vaporwave,cfxn.random_color((150,0,150),(50,0,50)),3,100,delay)
+    
 #nice blues with slightly purple backgrount
     #ambient_spots(0,[(180,60,220)]*numLEDs,blues,15,40,.5)
 
@@ -123,5 +148,4 @@ def ambient_fade(def_pixels,color_range,delay):
 # random color
 # ambient_spots(0,[black]*numLEDs,random_vapor,5,80,.5)
 
-#decent ambient vaporwave
-# ambient_spots(0,vaporwave,random_color((150,0,150),(50,0,50)),3,100,1)
+
